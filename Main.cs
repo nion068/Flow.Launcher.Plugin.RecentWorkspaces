@@ -47,28 +47,43 @@ public class RecentWorkspaces : IAsyncPlugin
         try
         {
             Logger.Write($"[RecentWorkspaces] Query: '{query?.Search}'");
-            var provider = new CursorWorkspaceProvider();
 
-            var folders = (await provider.GetWorkspaceFoldersAsync(cancellationToken))
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .Where(Directory.Exists)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
+            var providers = new IWorkspaceProvider[]
+            {
+                new CursorWorkspaceProvider(),
+                new VisualStudioWorkspaceProvider(),
+            };
+
+            var tasks = providers.Select(p => p.GetWorkspaceFoldersAsync(cancellationToken)).ToArray();
+            var resultsByProvider = await Task.WhenAll(tasks);
+
+            var combined = new List<(IWorkspaceProvider Provider, string Path)>();
+            for (int i = 0; i < providers.Length; i++)
+            {
+                foreach (var path in resultsByProvider[i])
+                {
+                    if (string.IsNullOrWhiteSpace(path)) continue;
+                    if (!File.Exists(path) && !Directory.Exists(path)) continue;
+                    combined.Add((providers[i], path));
+                }
+            }
+
+            // De-duplicate by path, keep first occurrence (Cursor preferred before VS)
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            combined = combined.Where(x => seen.Add(x.Path)).ToList();
+
+            Logger.Write($"[RecentWorkspaces] Combined folders: {combined.Count}");
+            foreach (var item in combined) Logger.Write($"[RecentWorkspaces] [{item.Provider.Name}] {item.Path}");
+
+            var results = combined
+                .Select(item => new Result
+                {
+                    Title = Path.GetFileName(item.Path),
+                    SubTitle = item.Path,
+                    IcoPath = item.Provider is CursorWorkspaceProvider ? "Icons/cursor.ico" : "Icons/vs.ico",
+                    Action = _ => item.Provider.OpenWorkspace(item.Path)
+                })
                 .ToList();
-
-            Logger.Write($"[RecentWorkspaces] Found {folders.Count} folders");
-
-            foreach (var f in folders) Logger.Write($"[RecentWorkspaces] Folder: {f}");
-
-            var results =
-                folders
-                    .Select(path => new Result
-                    {
-                        Title = Path.GetFileName(path),
-                        SubTitle = path,
-                        IcoPath = "Icons/cursor.ico",
-                        Action = _ => provider.OpenWorkspace(path)
-                    })
-                    .ToList();
 
             if (query.Search == string.Empty)
             {
