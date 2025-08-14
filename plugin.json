@@ -1,0 +1,12 @@
+{
+    "ID": "1B51FF610CC848CE806419B8F239B9DB",
+    "ActionKeyword": "r",
+    "Name": "RecentWorkspaces",
+    "Description": "Find your recent workspaces in cursor/vscode/vs",
+    "Author": "nion068",
+    "Version": "1.0.0",
+    "Language": "csharp",
+    "Website": "https://github.com/nion068/Flow.Launcher.Plugin.RecentWorkspaces",
+    "IcoPath": "icon.png",
+    "ExecuteFileName": "Flow.Launcher.Plugin.RecentWorkspaces.dll"
+}
