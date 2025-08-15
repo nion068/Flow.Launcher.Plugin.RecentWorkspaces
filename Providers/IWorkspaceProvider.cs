@@ -15,6 +15,12 @@ public interface IWorkspaceProvider
     string Name { get; }
 
     /// <summary>
+    /// Returns a relative icon path for results rendered from this provider.
+    /// </summary>
+    /// <returns>Relative path inside the plugin directory, e.g., "Icons/cursor.ico".</returns>
+    string GetIconPath();
+
+    /// <summary>
     /// Returns absolute folder paths for recent workspaces.
     /// </summary>
     Task<IReadOnlyList<string>> GetWorkspaceFoldersAsync(CancellationToken cancellationToken);

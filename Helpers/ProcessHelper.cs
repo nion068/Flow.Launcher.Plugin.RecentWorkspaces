@@ -52,6 +52,32 @@ public sealed class ProcessHelper
             return false;
         }
     }
+
+    /// <summary>
+    /// Opens a document or folder via the shell association (e.g., .sln with Visual Studio).
+    /// </summary>
+    public bool TryShellOpen(string path, string? workingDirectory = null)
+    {
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true,
+                Verb = "open",
+                WindowStyle = ProcessWindowStyle.Normal,
+                WorkingDirectory = workingDirectory ?? Path.GetDirectoryName(path) ?? Environment.CurrentDirectory
+            };
+            _starter.Start(psi);
+            Logger.Write($"[RecentWorkspaces] Shell open: {path}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Write($"[RecentWorkspaces] Shell open failed for '{path}': {ex.Message}");
+            return false;
+        }
+    }
 }
 
 /// <summary>

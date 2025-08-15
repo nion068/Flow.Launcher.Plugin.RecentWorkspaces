@@ -38,6 +38,9 @@ public class CursorWorkspaceProvider : IWorkspaceProvider
     /// <inheritdoc/>
     public string Name => "Cursor";
 
+    /// <inheritdoc />
+    public string GetIconPath() => "Icons/cursor.ico";
+
     /// <inheritdoc/>
     public async Task<IReadOnlyList<string>> GetWorkspaceFoldersAsync(CancellationToken cancellationToken)
     {

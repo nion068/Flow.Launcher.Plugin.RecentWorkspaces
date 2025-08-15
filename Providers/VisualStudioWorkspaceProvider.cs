@@ -40,6 +40,9 @@ public sealed class VisualStudioWorkspaceProvider : IWorkspaceProvider
     public string Name => "Visual Studio";
 
     /// <inheritdoc />
+    public string GetIconPath() => "Icons/vs.ico";
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<string>> GetWorkspaceFoldersAsync(CancellationToken cancellationToken)
     {
         string baseDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "VisualStudio");
@@ -92,18 +95,20 @@ public sealed class VisualStudioWorkspaceProvider : IWorkspaceProvider
         // For VS, folderPath is a .sln path
         try
         {
-            Logger.Write($"[RecentWorkspaces][VS] Launch request: {folderPath}");
+            Logger.Write($"[RecentWorkspaces][VS] Launch request (sln): {folderPath}");
 
-            // Prefer 'devenv' on PATH
-            if (_processHelper.TryStart("devenv", folderPath, Path.GetDirectoryName(folderPath))) return true;
+            if (_processHelper.TryStart("devenv", folderPath, Path.GetDirectoryName(folderPath)))
+            {
+                return true;
+            }
 
-            // Fallback: common install locations (VS Installer supports multiple paths; try minimal heuristics)
-            string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+
             var guesses = new[]
             {
-                Path.Combine(programFilesX86, "Microsoft Visual Studio", "2022", "Community", "Common7", "IDE", "devenv.exe"),
-                Path.Combine(programFilesX86, "Microsoft Visual Studio", "2022", "Professional", "Common7", "IDE", "devenv.exe"),
-                Path.Combine(programFilesX86, "Microsoft Visual Studio", "2022", "Enterprise", "Common7", "IDE", "devenv.exe")
+                Path.Combine(programFiles, "Microsoft Visual Studio", "2022", "Community", "Common7", "IDE", "devenv.exe"),
+                Path.Combine(programFiles, "Microsoft Visual Studio", "2022", "Professional", "Common7", "IDE", "devenv.exe"),
+                Path.Combine(programFiles, "Microsoft Visual Studio", "2022", "Enterprise", "Common7", "IDE", "devenv.exe")
             };
             foreach (var exe in guesses)
             {

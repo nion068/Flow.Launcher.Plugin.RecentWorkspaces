@@ -80,7 +80,7 @@ public class RecentWorkspaces : IAsyncPlugin
                 {
                     Title = Path.GetFileName(item.Path),
                     SubTitle = item.Path,
-                    IcoPath = item.Provider is CursorWorkspaceProvider ? "Icons/cursor.ico" : "Icons/vs.ico",
+                    IcoPath = item.Provider.GetIconPath(),
                     Action = _ => item.Provider.OpenWorkspace(item.Path)
                 })
                 .ToList();
