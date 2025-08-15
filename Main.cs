@@ -31,6 +31,25 @@ public class RecentWorkspaces : IAsyncPlugin
         return Task.CompletedTask;
     }
 
+    private static IWorkspaceProvider[] DiscoverProviders()
+    {
+        var providerType = typeof(IWorkspaceProvider);
+
+        return AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(a =>
+            {
+                try { return a.GetTypes(); } catch { return Array.Empty<Type>(); }
+            })
+            .Where(t => providerType.IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+            .Select(t =>
+            {
+                try { return Activator.CreateInstance(t) as IWorkspaceProvider; } catch { return null; }
+            })
+            .Where(p => p != null)
+            .Cast<IWorkspaceProvider>()
+            .ToArray();
+    }
+
     /// <summary>
     /// Returns results for the given query.
     /// </summary>
@@ -48,12 +67,7 @@ public class RecentWorkspaces : IAsyncPlugin
         {
             Logger.Write($"[RecentWorkspaces] Query: '{query?.Search}'");
 
-            var providers = new IWorkspaceProvider[]
-            {
-                new CursorWorkspaceProvider(),
-                new VisualStudioWorkspaceProvider(),
-            };
-
+            var providers = DiscoverProviders();
             var tasks = providers.Select(p => p.GetWorkspaceFoldersAsync(cancellationToken)).ToArray();
             var resultsByProvider = await Task.WhenAll(tasks);
 

@@ -12,7 +12,7 @@ namespace Flow.Launcher.Plugin.RecentWorkspaces.Providers;
 /// <summary>
 /// Reads recent workspace folders from Cursor's storage.json.
 /// </summary>
-public class CursorWorkspaceProvider : IWorkspaceProvider
+public class VSCodeWorkspaceProvider : IWorkspaceProvider
 {
     private static readonly FileTimestampCache<List<string>> Cache = new();
     private readonly ProcessHelper _processHelper;
@@ -20,22 +20,22 @@ public class CursorWorkspaceProvider : IWorkspaceProvider
     /// <summary>
     /// Creates a Cursor workspace provider with default process starter.
     /// </summary>
-    public CursorWorkspaceProvider() : this(new ProcessHelper(new DefaultProcessStarter())) { }
+    public VSCodeWorkspaceProvider() : this(new ProcessHelper(new DefaultProcessStarter())) { }
 
     /// <summary>
     /// Creates a Cursor workspace provider with a custom process helper (useful for testing).
     /// </summary>
     /// <param name="processHelper">Process helper to start external processes.</param>
-    public CursorWorkspaceProvider(ProcessHelper processHelper)
+    public VSCodeWorkspaceProvider(ProcessHelper processHelper)
     {
         _processHelper = processHelper;
     }
 
     /// <inheritdoc/>
-    public string Name => "Cursor";
+    public string Name => "VS Code";
 
     /// <inheritdoc />
-    public string GetIconPath() => "Icons/cursor.ico";
+    public string GetIconPath() => "Icons/vscode.ico";
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<string>> GetWorkspaceFoldersAsync(CancellationToken cancellationToken)
@@ -44,16 +44,16 @@ public class CursorWorkspaceProvider : IWorkspaceProvider
 
         if (string.IsNullOrEmpty(appData))
         {
-            Logger.Write("[RecentWorkspaces][Cursor] APPDATA not found");
+            Logger.Write("[RecentWorkspaces][VSCode] APPDATA not found");
             return Array.Empty<string>();
         }
 
-        string storagePath = Path.Combine(appData, "Cursor", "User", "globalStorage", "storage.json");
-        Logger.Write($"[RecentWorkspaces][Cursor] storage.json path: {storagePath}");
+        string storagePath = Path.Combine(appData, "Code", "User", "globalStorage", "storage.json");
+        Logger.Write($"[RecentWorkspaces][VSCode] storage.json path: {storagePath}");
 
         if (!File.Exists(storagePath))
         {
-            Logger.Write("[RecentWorkspaces][Cursor] storage.json not found");
+            Logger.Write("[RecentWorkspaces][VSCode] storage.json not found");
             return Array.Empty<string>();
         }
 
@@ -61,16 +61,16 @@ public class CursorWorkspaceProvider : IWorkspaceProvider
         {
             var collected = VSCodiumHelper.ExtractPathsFromStorage(path, VSCodiumHelper.TryConvertFileUriToWindowsPath, Logger.Write);
             var ordered = VSCodiumHelper.OrderByLastWriteDesc(collected);
-            Logger.Write($"[RecentWorkspaces][Cursor] Cache built (ordered): {ordered.Count}");
+            Logger.Write($"[RecentWorkspaces][VSCode] Cache built (ordered): {ordered.Count}");
             return ordered;
         }), cancellationToken);
 
-        Logger.Write($"[RecentWorkspaces][Cursor] Using cached folders: {list.Count}");
+        Logger.Write($"[RecentWorkspaces][VSCode] Using cached folders: {list.Count}");
         return list;
     }
 
     /// <summary>
-    /// Opens the specified folder with Cursor editor.
+    /// Opens the specified folder with VSCode editor.
     /// </summary>
     /// <param name="folderPath">Absolute folder path.</param>
     /// <returns>true if process start succeeded.</returns>
@@ -78,24 +78,17 @@ public class CursorWorkspaceProvider : IWorkspaceProvider
     {
         try
         {
-            Logger.Write($"[RecentWorkspaces][Cursor] Launch request: {folderPath}");
-            if (_processHelper.TryStart("cursor", folderPath)) return true;
+            Logger.Write($"[RecentWorkspaces][VSCode] Launch request: {folderPath}");
+            if (_processHelper.TryStart("code", folderPath)) return true;
 
             string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string exe1 = Path.Combine(localAppData, "Programs", "Cursor", "Cursor.exe");
+            string exe1 = Path.Combine(localAppData, "Programs", "Microsoft VS Code", "Code.exe");
             if (File.Exists(exe1) && _processHelper.TryStart(exe1, folderPath)) return true;
-
-            string exe2 = Path.Combine(localAppData, "Cursor", "Cursor.exe");
-            if (File.Exists(exe2) && _processHelper.TryStart(exe2, folderPath)) return true;
         }
         catch (Exception ex)
         {
-            Logger.Write($"[RecentWorkspaces][Cursor] Launch error: {ex}");
+            Logger.Write($"[RecentWorkspaces][VSCode] Launch error: {ex}");
         }
         return false;
     }
-
-    // Path conversion moved to VSCodiumHelper
 }
-
-
