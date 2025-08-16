@@ -2,17 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Web;
 
-namespace Flow.Launcher.Plugin.RecentWorkspaces.Helpers;
+namespace Flow.Launcher.Plugin.RecentWorkspaces.Commons;
 
 #nullable enable
 /// <summary>
 /// Utilities for VSCode-like editors (Cursor, VS Code, VSCodium) that store recents in storage.json.
 /// </summary>
-public static class VSCodiumHelper
+public static class VSCodium
 {
     /// <summary>
     /// Parses a VSCode-style storage.json and extracts recent workspace paths.

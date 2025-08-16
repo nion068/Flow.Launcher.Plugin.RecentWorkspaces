@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Flow.Launcher.Plugin.RecentWorkspaces.Caching;
-using Flow.Launcher.Plugin.RecentWorkspaces.Helpers;
+using Flow.Launcher.Plugin.RecentWorkspaces.Commons;
 using System.Threading;
 using System.Threading.Tasks;
+using Flow.Launcher.Plugin.RecentWorkspaces.Helpers;
 
 namespace Flow.Launcher.Plugin.RecentWorkspaces.Providers;
 
@@ -59,8 +60,8 @@ public class CursorWorkspaceProvider : IWorkspaceProvider
 
         List<string> list = await Task.Run(() => Cache.GetOrRefresh(storagePath, path =>
         {
-            var collected = VSCodiumHelper.ExtractPathsFromStorage(path, VSCodiumHelper.TryConvertFileUriToWindowsPath, Logger.Write);
-            var ordered = VSCodiumHelper.OrderByLastWriteDesc(collected);
+            var collected = VSCodium.ExtractPathsFromStorage(path, VSCodium.TryConvertFileUriToWindowsPath, Logger.Write);
+            var ordered = VSCodium.OrderByLastWriteDesc(collected);
             Logger.Write($"[RecentWorkspaces][Cursor] Cache built (ordered): {ordered.Count}");
             return ordered;
         }), cancellationToken);
@@ -94,8 +95,4 @@ public class CursorWorkspaceProvider : IWorkspaceProvider
         }
         return false;
     }
-
-    // Path conversion moved to VSCodiumHelper
 }
-
-

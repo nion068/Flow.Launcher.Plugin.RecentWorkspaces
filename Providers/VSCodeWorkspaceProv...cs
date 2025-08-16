@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Flow.Launcher.Plugin.RecentWorkspaces.Caching;
 using Flow.Launcher.Plugin.RecentWorkspaces.Helpers;
+using Flow.Launcher.Plugin.RecentWorkspaces.Commons;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -59,8 +60,8 @@ public class VSCodeWorkspaceProvider : IWorkspaceProvider
 
         List<string> list = await Task.Run(() => Cache.GetOrRefresh(storagePath, path =>
         {
-            var collected = VSCodiumHelper.ExtractPathsFromStorage(path, VSCodiumHelper.TryConvertFileUriToWindowsPath, Logger.Write);
-            var ordered = VSCodiumHelper.OrderByLastWriteDesc(collected);
+            var collected = VSCodium.ExtractPathsFromStorage(path, VSCodium.TryConvertFileUriToWindowsPath, Logger.Write);
+            var ordered = VSCodium.OrderByLastWriteDesc(collected);
             Logger.Write($"[RecentWorkspaces][VSCode] Cache built (ordered): {ordered.Count}");
             return ordered;
         }), cancellationToken);
