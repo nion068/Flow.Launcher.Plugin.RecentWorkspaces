@@ -13,7 +13,7 @@ namespace Flow.Launcher.Plugin.RecentWorkspaces;
 /// <summary>
 /// Flow Launcher plugin that displays recent workspaces.
 /// </summary>
-public class RecentWorkspaces : IAsyncPlugin
+public class RecentWorkspaces : IAsyncPlugin, IContextMenu
 {
     private PluginInitContext _context;
 
@@ -113,5 +113,72 @@ public class RecentWorkspaces : IAsyncPlugin
             try { Logger.Write($"[RecentWorkspaces] Query error: {ex}"); } catch { }
             return new List<Result>();
         }
+    }
+
+    /// <summary>
+    /// Load context menus for the selected result.
+    /// </summary>
+    /// <param name="selectedResult"></param>
+    /// <returns></returns>
+    public List<Result> LoadContextMenus(Result selectedResult)
+    {
+        var providers = DiscoverProviders();
+
+        var path = selectedResult.SubTitle;
+
+        var cursorProvider = providers.FirstOrDefault(p => p is CursorWorkspaceProvider);
+        var vscodeProvider = providers.FirstOrDefault(p => p is VSCodeWorkspaceProvider);
+        var vsProvider = providers.FirstOrDefault(p => p is VisualStudioWorkspaceProvider);
+
+        return new List<Result>
+        {
+            new()
+            {
+                Title = "Open in nvim",
+                SubTitle = "Open the workspace in nvim",
+                IcoPath = "Icons/nvim.ico",
+                Action = _ =>
+                {
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo()
+                        {
+                            FileName = "pwsh",
+                            Arguments = $"-NoExit -Command \"nvim .\"",
+                            WorkingDirectory = path,
+                            UseShellExecute = false
+                        });
+                        return true;
+                    }
+                    catch (Exception)
+                    {
+                        return false;
+                    }
+                },
+                Glyph = new GlyphInfo(FontFamily: "/Resources/#Segoe Fluent Icons", Glyph: "\ue756"),
+
+            },
+            new()
+            {
+                Title = "Open in Cursor",
+                SubTitle = "Open the workspace in Cursor",
+                IcoPath = cursorProvider.GetIconPath(),
+                Action = _ => cursorProvider.OpenWorkspace(path)
+            },
+            new()
+            {
+                Title = "Open in VS Code",
+                SubTitle = "Open the workspace in VS Code",
+                IcoPath = vscodeProvider.GetIconPath(),
+                Action = _ => vscodeProvider.OpenWorkspace(path)
+            },
+            new()
+            {
+                Title = "Open in Visual Studio",
+                SubTitle = "Open the workspace in Visual Studio",
+                IcoPath = vsProvider.GetIconPath(),
+                Action = _ => vsProvider.OpenWorkspace(path)
+            }
+        };
     }
 }
